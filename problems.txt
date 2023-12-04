@@ -1,0 +1,16 @@
+- cannot run docker from sshed bash shell: "-bash: docker: command not found"
+
+- docker not supposed to be run from a VM as in https://docs.docker.com/desktop/vm-vdi/
+
+- cannot run the docker swarm init --advertise-addr 192.168.137.3 from normal shell: "Error response from daemon: must 
+  specify a listening address because the address to advertise is not recognized as a system address, and a system's IP 
+  address to use could not be uniquely identified"
+
+-  don't know how to see if docker image/container is actually running my python script or doing anything
+
+- doesn't do anything for test case (see users/rache/sci_comp_special_core/cloud_comp/)
+
+
+docker cp CONTAINER:/var/logs/ /tmp/app_logs
+docker cp hzz:plot.png test.png
+
