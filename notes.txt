@@ -1,0 +1,5 @@
+- main_input will get the names of the files that need to be read and pass these to the workers
+- each worker should read in the files and then pass them to main_output 
+- main_output should take this data and execute the plotting code
+
+- pass url and val and s as one unit?
