@@ -64,6 +64,9 @@ def get_data_from_files():
             temp = read_file(fileString,val) # call the function read_file defined below
             frames.append(temp) # append array returned from read_file to list of awkward arrays
         data[s] = ak.concatenate(frames) # dictionary entry is concatenated awkward arrays
+    print("Data: \n")
+    print(len(data))
+    print(data.keys())
     
     return data # return dictionary of awkward arrays
 

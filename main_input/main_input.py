@@ -54,17 +54,29 @@ samples = {
 
 # get a file path from samples
 # pass it into the queue
-for item in samples:
-    for val in samples[item]['list']:
 
-        if item == 'data': prefix = "Data/" # Data prefix
+num_sent = 0
+for s in samples: # loop over samples
+    print('Processing '+s+' samples') # print which sample
+    frames = [] # define empty list to hold data
+    for val in samples[s]['list']: # loop over each file
+        if s == 'data': prefix = "Data/" # Data prefix
         else: # MC prefix
             prefix = "MC/mc_"+str(infofile.infos[val]["DSID"])+"."
-        fileString = tuple_path+prefix+val+".4lep.root" # file name to open
 
+        fileString = tuple_path+prefix+val+".4lep.root" # file name to open
         # put item into the queue
         # Send a message to the queue
-        channel.basic_publish(exchange='', routing_key='to_workers', body=fileString)
-
+        channel.basic_publish(exchange='', routing_key='to_workers', body=[fileString,s,val])
+        num_sent += 1
         print(" [x] Sent the fileString")
+
+# send the total number os URLs sent to the to_workers queue
+channel2 = connection.channel()
+
+# queue initiated
+channel2.queue_declare(queue='assert')
+
+channel2.basic_publish(exchange='', routing_key='assert', body=num_sent)
+
 

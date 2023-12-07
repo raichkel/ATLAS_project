@@ -30,6 +30,9 @@ params = pika.ConnectionParameters('rabbitmq')
 connection = pika.BlockingConnection(params)
 channel = connection.channel()
 
+# queue initiated
+channel.queue_declare(queue='to_output')
+
 
 def calc_weight(xsec_weight, events):
     return (
@@ -121,18 +124,35 @@ def read_file(path,sample):
     return ak.concatenate(data_all) # return array containing events passing all cuts
 
 
+
+# start listening
+channel.start_consuming()
 data = {} # define empty dictionary to hold awkward arrays
-frames = [] # define empty list to hold data
+
+index = 0
 # Receive messages from the queue
-def callback(ch, method, properties, body):
+def callback(ch, method, properties, body, index):
     print(f" [x] Received {body}")
-    # body is fileString
-    fileString = body
+
+    frames = [] # define empty list to hold data
+    # body is [fileString,s,val]
+    fileString = body[0]
+    s = body[1]
+    val = body[2]
+
     temp = read_file(fileString,val) # call the function read_file defined below
     frames.append(temp) # append array returned from read_file to list of awkward arrays
-    data[] = ak.concatenate(frames) # dictionary entry is concatenated awkward arrays
+    data[index] = ak.concatenate(frames) # dictionary entry is concatenated awkward arrays
+    index += 1
 
 channel.basic_consume(queue='to_workers', on_message_callback=callback, auto_ack=True)
 
 # start listening
 channel.start_consuming()
+
+# need some way of ensuring that it has receieved the expected number of URLs and processed these before sending
+
+# put data into queue
+channel.basic_publish(exchange='', routing_key='to_output', body=data)
+
+print(" [x] Sent the data")
