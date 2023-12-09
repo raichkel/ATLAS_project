@@ -4,7 +4,15 @@ import matplotlib.pyplot as plt
 from matplotlib.ticker import AutoMinorLocator # for minor ticks
 import numpy as np
 import awkward as ak # to represent nested data in columnar format
+import os
 
+#lumi = 0.5 # fb-1 # data_A only
+#lumi = 1.9 # fb-1 # data_B only
+#lumi = 2.9 # fb-1 # data_C only
+lumi = 4.7 # fb-1 # data_D only
+#lumi = 10 # fb-1 # data_A,data_B,data_C,data_D
+
+fraction = 0.1 # reduce this is if you want the code to run quicker
 # when RabbitMQ is running on localhost
 #params = pika.ConnectionParameters('localhost')
 
@@ -13,7 +21,6 @@ params = pika.ConnectionParameters('rabbitmq')
 
 # create the connection to broker
 connection = pika.BlockingConnection(params)
-channel = connection.channel()
 
 
 samples = {
@@ -170,20 +177,21 @@ def plot_data(data):
     
     return
 
-def callback_2(ch, method, properties, body):
-    return body
+
 
 # data is a dictionary of awkward arrays
+def read_in_file(base_path="/app/data/"):
+    data = {}
+    for filename in os.listdir(base_path):
+        if filename.endswith(".awkd"):
+            key = filename.split('.')[0]
+            array_path = os.path.join(base_path, filename)
+            array = ak.from_parquet(array_path)
+            data[key] = array
+    return data
 
-# send the total number os URLs sent to the to_workers queue
-channel2 = connection.channel()
 
-num_recv = channel2.basic_consume(queue='assert', on_message_callback=callback_2, auto_ack=True)
 
-# start listening
-channel2.start_consuming()
-
-overall_data = {}
 # overall data will be a dictionary of dictionaries
 # need to combine the dictionaries together into one 
 index = 0
@@ -191,17 +199,7 @@ index = 0
 def callback(ch, method, properties, body,index):
     print(f" [x] Received {body}")
     # concatenate body onto overall_data
-    overall_data[index] = body
+    data = read_in_file()
     index += 1
+    plot_data(data)
 
-
-
-
-channel.basic_consume(queue='to_output', on_message_callback=callback, auto_ack=True)
-
-# start listening
-channel.start_consuming()
-
-
-if index == num_recv-1:
-    # all the data has been reci

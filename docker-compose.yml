@@ -1,10 +1,52 @@
-version: '3'
+version: "3.8"
+
 services:
+
   rabbitmq:
-    image: "rabbitmq:3-management"
+    image: rabbitmq:3-management
     ports:
-      - "5672:5672"
       - "15672:15672"
-    environment:
-      RABBITMQ_DEFAULT_USER: guest
-      RABBITMQ_DEFAULT_PASS: guest
+      - "5672:5672"
+    networks:
+      - rabbit
+    volumes:
+      - shared_volume:/app/data
+
+
+  main_input:
+
+    build:
+      context: /c/Users/rache/ATLAS_project/input
+      #dockerfile: ./ouput/Dockerfile
+    networks:
+      - rabbit
+    volumes:
+      - shared_volume:/app/data
+
+  main_output:
+
+    build:
+      context: /c/Users/rache/ATLAS_project/output
+      #dockerfile: ./ouput/Dockerfile
+    networks:
+      - rabbit
+    volumes:
+      - shared_volume:/app/data
+  worker:
+
+    build:
+      context: /c/Users/rache/ATLAS_project/worker
+      #dockerfile: ./ouput/Dockerfile
+    networks:
+      - rabbit
+    volumes:
+      - shared_volume:/app/data
+
+volumes:
+  shared_volume:     
+
+networks:
+  rabbit:
+    driver: overlay
+    attachable: true
+

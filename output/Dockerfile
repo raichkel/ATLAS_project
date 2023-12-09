@@ -2,7 +2,7 @@
 FROM python:latest
 
 # add our python program
-ADD main_input.py ./
+ADD output.py ./
 ADD infofile.py ./
 # install dependent libraries
 RUN pip install numpy 
@@ -13,4 +13,4 @@ RUN pip install vector
 
 
 # the command to run our program
-CMD [ "python", "./main_input.py"]
+CMD [ "python", "./output.py"]

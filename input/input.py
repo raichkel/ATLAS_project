@@ -71,7 +71,7 @@ for s in samples: # loop over samples
         num_sent += 1
         print(" [x] Sent the fileString")
 
-# send the total number os URLs sent to the to_workers queue
+# send the total number of URLs sent to the assert queue
 channel2 = connection.channel()
 
 # queue initiated

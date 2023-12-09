@@ -3,3 +3,13 @@
 - main_output should take this data and execute the plotting code
 
 - pass url and val and s as one unit?
+
+main_output:
+    image: /output/output
+    build:
+    context: ./
+    dockerfile: ./ouput/Dockerfile
+    networks:
+    - rabbit
+    volumes:
+    - shared_volume:/app/data

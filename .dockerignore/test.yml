@@ -1,0 +1,29 @@
+version: '3'
+
+services:
+  webapp:
+    image: your-webapp-image
+    ports:
+      - "8080:80"
+    networks:
+      - mynetwork
+    volumes:
+      - myvolume:/app/data
+
+  database:
+    image: your-database-image
+    environment:
+      - MYSQL_ROOT_PASSWORD=mysecretpassword
+    networks:
+      - mynetwork
+    volumes:
+      - dbdata:/var/lib/mysql
+
+networks:
+  mynetwork:
+    driver: bridge
+
+volumes:
+  myvolume:
+  dbdata:
+

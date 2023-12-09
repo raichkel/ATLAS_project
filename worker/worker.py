@@ -10,7 +10,7 @@ from matplotlib.ticker import AutoMinorLocator # for minor ticks
 
 import pika
 import infofile # local file containing cross-sections, sums of weights, dataset IDs
-
+import os
 
 #lumi = 0.5 # fb-1 # data_A only
 #lumi = 1.9 # fb-1 # data_B only
@@ -30,8 +30,7 @@ params = pika.ConnectionParameters('rabbitmq')
 connection = pika.BlockingConnection(params)
 channel = connection.channel()
 
-# queue initiated
-channel.queue_declare(queue='to_output')
+
 
 
 def calc_weight(xsec_weight, events):
@@ -124,16 +123,25 @@ def read_file(path,sample):
     return ak.concatenate(data_all) # return array containing events passing all cuts
 
 
+def write_to_volume(data, path="/app/data/"):
+
+    for key, val in data.items():
+        
+        filename =  os.path.join(path, f"{key}.awkd")
+        ak.to_parquet(val, filename)
+
+
 
 # start listening
 channel.start_consuming()
-data = {} # define empty dictionary to hold awkward arrays
+
+
 
 index = 0
 # Receive messages from the queue
 def callback(ch, method, properties, body, index):
     print(f" [x] Received {body}")
-
+    dict ={}
     frames = [] # define empty list to hold data
     # body is [fileString,s,val]
     fileString = body[0]
@@ -142,17 +150,15 @@ def callback(ch, method, properties, body, index):
 
     temp = read_file(fileString,val) # call the function read_file defined below
     frames.append(temp) # append array returned from read_file to list of awkward arrays
-    data[index] = ak.concatenate(frames) # dictionary entry is concatenated awkward arrays
+    dict[s] = ak.concatenate(frames) # dictionary entry is concatenated awkward arrays
+    # write this dict to the shared volume
     index += 1
+    write_to_volume(dict)
 
 channel.basic_consume(queue='to_workers', on_message_callback=callback, auto_ack=True)
 
 # start listening
 channel.start_consuming()
 
-# need some way of ensuring that it has receieved the expected number of URLs and processed these before sending
 
-# put data into queue
-channel.basic_publish(exchange='', routing_key='to_output', body=data)
 
-print(" [x] Sent the data")

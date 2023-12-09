@@ -2,7 +2,7 @@
 FROM python:latest
 
 # add our python program
-ADD higgs_script.py ./
+ADD input.py ./
 ADD infofile.py ./
 # install dependent libraries
 RUN pip install numpy 
@@ -13,4 +13,4 @@ RUN pip install vector
 
 
 # the command to run our program
-CMD [ "python", "./higgs_script.py"]
+CMD [ "python", "./input.py"]
