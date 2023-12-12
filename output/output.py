@@ -13,14 +13,7 @@ lumi = 4.7 # fb-1 # data_D only
 #lumi = 10 # fb-1 # data_A,data_B,data_C,data_D
 
 fraction = 0.1 # reduce this is if you want the code to run quicker
-# when RabbitMQ is running on localhost
-#params = pika.ConnectionParameters('localhost')
 
-# when RabbitMQ broker is running on network
-params = pika.ConnectionParameters('rabbitmq')
-
-# create the connection to broker
-connection = pika.BlockingConnection(params)
 
 
 samples = {
@@ -180,26 +173,29 @@ def plot_data(data):
 
 
 # data is a dictionary of awkward arrays
-def read_in_file(base_path="/app/data/"):
+def read_in_file(path="/app/data/"):
     data = {}
-    for filename in os.listdir(base_path):
+    for filename in os.listdir(path):
+        # add each awkward array into the dictionary using its key
         if filename.endswith(".awkd"):
             key = filename.split('.')[0]
-            array_path = os.path.join(base_path, filename)
+            print(f"key: {key}")
+            array_path = os.path.join(path, filename)
             array = ak.from_parquet(array_path)
+            print(f"array: {array}")
             data[key] = array
     return data
 
 
 
-# overall data will be a dictionary of dictionaries
-# need to combine the dictionaries together into one 
-index = 0
-# Receive messages from the queue
-def callback(ch, method, properties, body,index):
-    print(f" [x] Received {body}")
-    # concatenate body onto overall_data
+# check that /app/data/flag.txt exists and contains 'read'
+
+files_list = os.listdir("/app/data")
+if "flag.txt" in files_list:
+
+    # read in all awkward arrays
     data = read_in_file()
-    index += 1
+    
+    # pass to plotting function and plot
     plot_data(data)
 

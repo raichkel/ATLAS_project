@@ -62,6 +62,7 @@ def get_data_from_files():
             fileString = tuple_path+prefix+val+".4lep.root" # file name to open
         
             temp = read_file(fileString,val) # call the function read_file defined below
+            # called per val in samples[s]['list']
             frames.append(temp) # append array returned from read_file to list of awkward arrays
         data[s] = ak.concatenate(frames) # dictionary entry is concatenated awkward arrays
     print("Data: \n")
@@ -116,6 +117,7 @@ def cut_lep_type(lep_type):
 
 
 def read_file(path,sample):
+    #filestring,val
     #start = time.time() # start the clock
     print("\tProcessing: "+sample) # print which sample is being processed
     data_all = [] # define empty list to hold all data for this sample
@@ -167,6 +169,7 @@ def read_file(path,sample):
 
 #start = time.time() # time at start of whole processing
 data = get_data_from_files() # process all files
+print(data.keys())
 #elapsed = time.time() - start # time after whole processing
 #print("Time taken: "+str(round(elapsed,1))+"s") # print total time taken to process every file
 

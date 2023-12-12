@@ -7,7 +7,7 @@ import vector # for 4-momentum calculations
 import numpy as np # for numerical calculations such as histogramming
 import matplotlib.pyplot as plt # for plotting
 from matplotlib.ticker import AutoMinorLocator # for minor ticks
-
+import fcntl
 import pika
 import infofile # local file containing cross-sections, sums of weights, dataset IDs
 import os
@@ -22,15 +22,6 @@ fraction = 0.1 # reduce this is if you want the code to run quicker
                                                                                                                                   
 #tuple_path = "Input/4lep/" # local 
 tuple_path = "https://atlas-opendata.web.cern.ch/atlas-opendata/samples/2020/4lep/" # web address
-
-# when RabbitMQ broker is running on network
-params = pika.ConnectionParameters('rabbitmq')
-
-# create the connection to broker
-connection = pika.BlockingConnection(params)
-channel = connection.channel()
-
-
 
 
 def calc_weight(xsec_weight, events):
@@ -124,41 +115,79 @@ def read_file(path,sample):
 
 
 def write_to_volume(data, path="/app/data/"):
+    # write data to shared volume
 
     for key, val in data.items():
-        
+        # create new file per dict item 
+        # (each dict item is an awkard array)
         filename =  os.path.join(path, f"{key}.awkd")
         ak.to_parquet(val, filename)
 
 
 
-# start listening
-channel.start_consuming()
+def read_url_write_data(filename, path="/app/data/"):
+    # go into shared volume and look for files ending in .txt (these will have urls)
+    # read the url, s and val from file
+    # then delete that file
+    # need to check that the file is not being read before we read it
+    # then mark that it is being read whilst we read it
+    # then release the lock and delete file
+
+    filepath = os.path.join(path, filename)
+
+    with open(filepath, 'r') as file:
+        try:
+            # lock the file if we can 
+            fcntl.flock(file, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            # read 
+            lines = file.readlines()[0]
+            lines = lines.split(",")
+            fileString = lines[0]
+            s = lines[1]
+            val = lines[2]
+            
+            os.remove(filepath)
+
+            # need a new dict for each array - easier to save and read back out this way
+            dict ={}
+            frames = [] # define empty list to hold data
+
+            temp = read_file(fileString,val) # call the function read_file defined below
+            frames.append(temp) # append array returned from read_file to list of awkward arrays
+            dict[s] = ak.concatenate(frames) # dictionary entry is concatenated awkward arrays
+            # write this dict to the shared volume
+            write_to_volume(dict)
+
+        except IOError as e:
+            # Handle the case when the file is already locked
+            pass # move on to the next file 
+
+        finally:
+            # Release the lock
+            fcntl.flock(file, fcntl.LOCK_UN)
+
+ 
 
 
 
-index = 0
-# Receive messages from the queue
-def callback(ch, method, properties, body, index):
-    print(f" [x] Received {body}")
-    dict ={}
-    frames = [] # define empty list to hold data
-    # body is [fileString,s,val]
-    fileString = body[0]
-    s = body[1]
-    val = body[2]
+def create_flag(path="/app/data/"):
+    # create file to show that all urls have been read and all data has been read
+    filepath = os.path.join(path, "flag.txt")
 
-    temp = read_file(fileString,val) # call the function read_file defined below
-    frames.append(temp) # append array returned from read_file to list of awkward arrays
-    dict[s] = ak.concatenate(frames) # dictionary entry is concatenated awkward arrays
-    # write this dict to the shared volume
-    index += 1
-    write_to_volume(dict)
+    with open(filepath, 'w') as file:
+        file.write("read")
 
-channel.basic_consume(queue='to_workers', on_message_callback=callback, auto_ack=True)
+MeV = 0.001
+GeV = 1.0
+              
+index = 1
 
-# start listening
-channel.start_consuming()
+path = "/app/data/"
+for filename in os.listdir(path):
+    # add each awkward array into the dictionary using its key
+    if filename.endswith(".txt"):
+        read_url_write_data(filename)
+
 
 
 

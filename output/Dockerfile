@@ -10,7 +10,9 @@ RUN pip install matplotlib
 RUN pip install uproot
 RUN pip install awkward
 RUN pip install vector
-
-
+#RUN pip install os
+RUN pip install pika
+RUN pip install pyarrow
+RUN pip install fsspec
 # the command to run our program
 CMD [ "python", "./output.py"]

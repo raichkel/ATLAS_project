@@ -5,11 +5,13 @@ FROM python:latest
 ADD input.py ./
 ADD infofile.py ./
 # install dependent libraries
+
 RUN pip install numpy 
 RUN pip install matplotlib
 RUN pip install uproot
 RUN pip install awkward
 RUN pip install vector
+RUN pip install pika
 
 
 # the command to run our program

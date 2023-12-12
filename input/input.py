@@ -7,15 +7,9 @@ import vector # for 4-momentum calculations
 import numpy as np # for numerical calculations such as histogramming
 import matplotlib.pyplot as plt # for plotting
 from matplotlib.ticker import AutoMinorLocator # for minor ticks
-
+import os
 import infofile # local file containing cross-sections, sums of weights, dataset IDs
 
-# Connect to RabbitMQ server
-connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
-channel = connection.channel()
-
-# queue initiated
-channel.queue_declare(queue='to_workers')
 
 #lumi = 0.5 # fb-1 # data_A only
 #lumi = 1.9 # fb-1 # data_B only
@@ -51,11 +45,17 @@ samples = {
 
 }
 
+def write_url(url, s, val, path="/app/data/"):
+    # write url,s,val to unique .txt file for use by workers
+    # /app/data/ is the shared volume
+    filepath = os.path.join(path,f"{val}.txt")
+    with open(filepath, 'w') as file:
+        file.write(f"{url},{s},{val}")
 
-# get a file path from samples
-# pass it into the queue
 
-num_sent = 0
+
+
+# get files from samples
 for s in samples: # loop over samples
     print('Processing '+s+' samples') # print which sample
     frames = [] # define empty list to hold data
@@ -65,18 +65,11 @@ for s in samples: # loop over samples
             prefix = "MC/mc_"+str(infofile.infos[val]["DSID"])+"."
 
         fileString = tuple_path+prefix+val+".4lep.root" # file name to open
-        # put item into the queue
-        # Send a message to the queue
-        channel.basic_publish(exchange='', routing_key='to_workers', body=[fileString,s,val])
-        num_sent += 1
-        print(" [x] Sent the fileString")
 
-# send the total number of URLs sent to the assert queue
-channel2 = connection.channel()
+        write_url(fileString,s,val)
+        
+  
 
-# queue initiated
-channel2.queue_declare(queue='assert')
 
-channel2.basic_publish(exchange='', routing_key='assert', body=num_sent)
 
 

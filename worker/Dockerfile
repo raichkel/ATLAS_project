@@ -10,6 +10,11 @@ RUN pip install matplotlib
 RUN pip install uproot
 RUN pip install awkward
 RUN pip install vector
+RUN pip install pika
+# some modules that made awkward break if I didn't have them...
+RUN pip install pyarrow
+RUN pip install fsspec
+RUN pip install fcntl
 
 
 # the command to run our program

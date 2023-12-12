@@ -2,51 +2,54 @@ version: "3.8"
 
 services:
 
-  rabbitmq:
-    image: rabbitmq:3-management
-    ports:
-      - "15672:15672"
-      - "5672:5672"
-    networks:
-      - rabbit
-    volumes:
-      - shared_volume:/app/data
+  # rabbitmq:
+  #   image: rabbitmq:3-management
+  #   ports:
+  #     - "15672:15672"
+  #     - "5672:5672"
+  #   networks:
+  #     - rabbit
+  #   volumes:
+  #     - shared_volume:/app/data
 
 
   main_input:
 
-    build:
-      context: /c/Users/rache/ATLAS_project/input
-      #dockerfile: ./ouput/Dockerfile
-    networks:
-      - rabbit
+    build: input
+      # context: /c/Users/rache/ATLAS_project/input
+      # #dockerfile: ./ouput/Dockerfile
+    # networks:
+    #   - rabbit
     volumes:
       - shared_volume:/app/data
 
   main_output:
 
-    build:
-      context: /c/Users/rache/ATLAS_project/output
-      #dockerfile: ./ouput/Dockerfile
-    networks:
-      - rabbit
+    build: output
+    #   context: /c/Users/rache/ATLAS_project/output
+    #   #dockerfile: ./ouput/Dockerfile
+    # networks:
+    #   - rabbit
     volumes:
       - shared_volume:/app/data
   worker:
 
-    build:
-      context: /c/Users/rache/ATLAS_project/worker
-      #dockerfile: ./ouput/Dockerfile
-    networks:
-      - rabbit
+    build: worker
+    #   context: /c/Users/rache/ATLAS_project/worker
+    #   #dockerfile: ./ouput/Dockerfile
+    # networks:
+    #   - rabbit
     volumes:
       - shared_volume:/app/data
 
 volumes:
   shared_volume:     
 
-networks:
-  rabbit:
-    driver: overlay
-    attachable: true
+
+scale:
+  worker: 3
+# networks:
+#   rabbit:
+#     driver: overlay
+#     attachable: true
 
