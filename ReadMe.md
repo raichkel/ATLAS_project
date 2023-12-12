@@ -7,3 +7,12 @@ Project to write a cloud data processing software to read and plot ATLAS HZZ dat
     scale:
         worker: 3 # change this to the number of desired workers
     ```
+- Run the following in the command line:
+
+    ```
+    docker-compose up -d
+    ```
+- Once completed, run the following to retrieve the graph:
+    ```
+    docker cp shared_volume:/app/data/plot.png /path/to/desired/local/file
+    ```
